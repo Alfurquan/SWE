@@ -245,3 +245,60 @@ Here is the high level architecture for the app
 - CDN failures: Use multiple CDNs to ensure high availability and reliability. If one CDN fails, the streaming service can fetch the song file from the next closest CDN node or directly from the Object Storage.
 
 ---
+
+## Diving Deep into Key Components (From online solutions)
+
+### Music Streaming Service
+
+The Streaming Service is at the heart of Spotify’s architecture, responsible for delivering music content efficiently, securely, and reliably to millions of users in real time.
+
+The actual delivery of music files is managed by a Content Delivery Networks (Cloudflare, AWS CloudFront). This ensures that music is served from geographically distributed servers close to the user, minimizing latency and bandwidth consumption.
+
+#### Request Workflow:
+
+- Client sends a streaming request (e.g., /stream/{song_id}).
+- The API gateway authenticates the user and routes the request to the Streaming Service.
+- If the song is not in the CDN, the Streaming Service retrieves the audio file’s location (from the blob storage) and pushes the file to the nearest CDN edge server. The CDN returns a URL to the streaming service to stream the audio.
+- The CDN URL is returned to the client, allowing the client to stream the audio.
+
+### Recommendation Service
+
+The recommendation system analyzes the user's listening habits, likes, and playlists. It uses a combination of collaborative filtering (based on users with similar preferences) and content-based filtering (based on song metadata).
+
+#### Collaborative Filtering
+
+Collaborative filtering is one of the most commonly used techniques in recommendation systems. This method leverages the behavior of users with similar music tastes to generate recommendations.
+
+- User-Based Collaborative Filtering: This technique groups users based on their listening history. For example, if User A and User B both frequently listen to the same set of artists and songs, the system may recommend songs that User A has listened to but User B hasn’t.
+
+- Item-Based Collaborative Filtering: In this technique, songs are recommended based on their similarity to songs the user has previously liked. If many users who like Song X also like Song Y, the system recommends Song Y to users who have listened to Song X.
+
+#### Content-Based Filtering
+
+Content-based filtering focuses on the attributes of the songs themselves. The system analyzes song metadata such as genre, artist, tempo, and mood to recommend similar tracks.
+
+- Song Attributes: Spotify collects metadata on each song, including genre, tempo, mood, and instruments. This data is used to recommend songs with similar attributes to what the user has already liked or listened to.
+
+- Artist Similarity: If a user listens to multiple songs from a particular artist, the system may recommend songs from similar artists, based on shared attributes (e.g., genre, style).
+
+### Search Service
+
+The Search Service in Spotify allows users to find songs, artists, albums, playlists, and podcasts from a vast catalog efficiently.
+
+The architecture of Search Service can be broken down into the following key components:
+
+- Query Parser: Interprets and normalizes the user’s search query.
+
+- Search Index: A dynamically updated index that contains metadata for all songs, artists, albums, and playlists. A search engine like Elasticsearch or Apache Solr can be used to build and manage this index.
+
+- Ranking Engine: Once the search index returns matching results, the Ranking Engine sorts the results to ensure that the most relevant results appear at the top.
+
+- Personalization Layer: Customizes search results based on the user’s listening history, preferences, and demographic information.
+
+- Search Autocomplete: Provides users with suggestions as they type their queries, speeding up the search process.
+
+- Cache Layer: Caches frequently searched queries to improve performance and reduce the load on the backend.
+
+- Search Index Updater: Ensures that the search index stays up to date with new content being added to Spotify’s catalog.
+
+---
