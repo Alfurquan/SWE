@@ -217,3 +217,16 @@ To improve performance and reduce latency, we can use a distributed cache like R
 To ensure messages are synced across multiple devices, we can use the Sync Service to deliver messages to all devices associated with a user. When a user sends a message, the Chat Service will send the message to the Message Queue, and the Sync Service will pick up the message from the Message Queue and deliver it to all devices associated with the recipient user(s) via their respective WebSocket connections. The Sync Service will also handle message delivery when a user comes online after being offline
 
 ---
+
+### Notes after reading hello interview solution
+
+- **Start with Hello Interview Approach:**
+"For offline message delivery, I'll use an Inbox table approach. When sending messages, we'll write to both the Messages table and create Inbox entries for each recipient in a single transaction. This guarantees consistency and is simple to implement."
+
+- **Acknowledge Message Queue Alternative:**
+"Alternatively, we could use message queues for offline delivery, which would help if we need to decouple message processing from delivery, or if we're building a broader event-driven architecture. However, for the core chat use case, the database approach is more straightforward."
+
+- **Discuss Scaling:**
+"As we scale, if the Inbox table becomes a bottleneck, we can shard it by userId. Message queues would become more attractive if we need to add features like push notifications, analytics, or content moderation, where we want to decouple these concerns."
+
+---
