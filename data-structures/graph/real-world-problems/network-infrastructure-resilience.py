@@ -87,7 +87,7 @@ def _find_critical_connections(server: Server,
             if low[connection] > disc[server]:
                 result.append([server, connection])
                 
-        elif server_states[connection] == TraversalState.VISITING:
+        else:
             low[server] = min(low[server], low[connection])
             
     
