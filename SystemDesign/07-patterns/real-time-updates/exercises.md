@@ -155,7 +155,7 @@ Your task: How do you handle real-time collaboration? What's your approach?
 
 ---
 
-## Scenario 4: ive Sports Score Updates
+## Scenario 4: Live Sports Score Updates
 
 You're building a sports app that shows live scores, game events (goals, fouls, etc.), and commentary. Updates happen every few seconds to minutes. Users just view - no interaction needed. During major events, you have 10 million concurrent viewers.
 

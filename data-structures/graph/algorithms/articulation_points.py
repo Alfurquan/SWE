@@ -50,7 +50,8 @@ def _dfs(node: Node,
             elif parent is not None and low[to_node] >= disc[node]:
                 result.add(node.label)
                 
-        elif node_states[to_node] == NodeState.VISITING:
+        #elif node_states[to_node] == NodeState.VISITING:
+        else:
             low[node] = min(low[node], low[to_node])
             
     node_states[node] = NodeState.VISITED
