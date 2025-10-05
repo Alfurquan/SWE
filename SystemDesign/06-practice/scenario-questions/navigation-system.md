@@ -169,3 +169,202 @@ Here's the high level diagram of the architecture. Note that this is a very basi
 - Map tile caching and CDN usage: We can use a CDN to distribute map tiles globally. We can also use a caching layer like Redis or Memcached to cache frequently accessed map tiles.
 
 ---
+
+## Enhanced Solution with Deep Dives
+
+### Functional Requirements (Enhanced)
+
+- Search: Location/POI search with autocomplete and ranking
+- Route Calculation: Multi-modal routing with real-time traffic
+- Navigation: Turn-by-turn guidance with re-routing
+- Map Rendering: Dynamic map tiles with different zoom levels
+- Traffic Integration: Real-time traffic data from multiple sources
+
+### Non-Functional Requirements (Enhanced)
+
+- Scale: 100M+ users, 1M+ concurrent navigation sessions
+- Latency: <100ms search, <200ms route calculation, <50ms map tiles
+- Availability: 99.99% uptime with global distribution
+- Accuracy: <5m location precision, 95% ETA accuracy
+
+### Core Entities (Enhanced)
+
+#### Road Segment
+
+```json
+{
+  "id": "road_123",
+  "start_node": "node_456",
+  "end_node": "node_789",
+  "geometry": [[lat1, lon1], [lat2, lon2]],
+  "road_type": "highway|arterial|local",
+  "speed_limit": 65,
+  "length_meters": 1500,
+  "one_way": false,
+  "toll": true
+}
+```
+
+#### Traffic Data
+
+```json
+{
+  "road_segment_id": "road_123",
+  "timestamp": "2025-10-03T14:30:00Z",
+  "speed_kmh": 45,
+  "congestion_level": "moderate",
+  "incidents": ["accident", "construction"]
+}
+```
+
+### Enhanced Architecture components
+
+1. Geocoding Service
+
+- Forward geocoding (address → coordinates)
+- Reverse geocoding (coordinates → address)
+- POI search with Elasticsearch
+- Autocomplete with trie data structures
+
+2. Routing Engine
+
+- Preprocessing: Contraction Hierarchies for highway networks
+- A* algorithm with traffic-aware weights
+- Route caching with Redis (popular origin-destination pairs)
+- Multi-modal routing (driving, walking, transit)
+
+3. Map Tile Service
+
+- Vector tiles for efficient rendering
+- Multiple zoom levels (0-18)
+- Real-time style updates
+- CDN distribution with edge caching
+
+4. Traffic Data Pipeline
+
+- Real-time ingestion from GPS probes, traffic cameras, incidents
+- Stream processing with Apache Kafka + Apache Flink
+- Machine learning for traffic prediction
+- Historical traffic patterns storage
+
+5. Navigation Service
+
+- WebSocket connections for real-time updates
+- Route re-calculation when off-route
+- Turn-by-turn instruction generation
+- ETA updates based on current traffic
+
+### Deep Dive Interview Questions & Answers
+
+#### How would you handle route calculation for millions of concurrent requests?
+
+1. **Preprocessing**: Use Contraction Hierarchies to precompute shortcuts
+   - Reduces graph size by 1000x for highway queries
+   - Allows sub-millisecond routing for long distances
+
+2. **Caching Strategy**:
+   - Popular routes cached in Redis (airport to city center)
+   - Cache key: hash(origin, destination, travel_mode, time_of_day)
+   - TTL based on traffic volatility (5min for city, 30min for highways)
+
+3. **Load Balancing**:
+   - Geographically partition routing servers
+   - Route local queries to local servers (data locality)
+   - Fallback to global servers for cross-region routes
+
+4. **Algorithmic Optimizations**:
+   - Bidirectional A* for faster convergence
+   - Early termination when good-enough route found
+   - Batch processing for similar queries
+  
+#### How do you ensure real-time traffic data accuracy and handle data source failures?
+
+1. **Multi-Source Data Fusion**:
+   - GPS probes from users (anonymized)
+   - Government traffic feeds
+   - Third-party providers (Waze, Here)
+   - IoT sensors and cameras
+
+2. **Data Quality & Validation**:
+   - Outlier detection (speed > speed_limit * 1.5)
+   - Temporal consistency checks
+   - Cross-validation between sources
+   - Machine learning models to detect anomalies
+
+3. **Failure Handling**:
+   - Graceful degradation to historical patterns
+   - Weighted averaging when some sources fail
+   - Circuit breakers for unreliable data sources
+   - Fallback to crowd-sourced data
+
+4. **Real-time Processing**:
+   - Kafka for data ingestion (partitioned by geographic region)
+   - Flink for stream processing and aggregation
+   - Update road segment speeds every 30 seconds
+   - Push updates to active navigation sessions
+
+#### How would you optimize map tile serving for global users?
+
+1. **Tile Generation Strategy**:
+   - Pre-generate tiles for zoom levels 0-12 globally
+   - On-demand generation for 13-18 in populated areas
+   - Vector tiles for smaller size and dynamic styling
+
+2. **CDN Architecture**:
+   - Multi-tier CDN: Global → Regional → Edge
+   - Tile caching with smart eviction (LRU + geographic relevance)
+   - Pre-warming cache for popular areas
+
+3. **Geographic Partitioning**:
+   - Tile servers co-located with user bases
+   - Regional tile storage for local optimizations
+   - Cross-region replication for disaster recovery
+
+4. **Performance Optimizations**:
+   - HTTP/2 for multiplexed tile requests
+   - Compression (gzip for vector tiles)
+   - Progressive loading (low-res first, then high-res)
+   - Predictive pre-fetching based on user movement
+
+#### How would you handle graph data structure for road networks
+
+1. **Graph Representation**:
+   - Nodes: Intersections and road junctions
+   - Edges: Road segments with weights (time, distance, toll)
+   - Adjacency list storage for memory efficiency
+
+2. **Database Choice**:
+   - Neo4j for complex routing queries
+   - Custom graph storage for performance-critical paths
+   - PostgreSQL with graph extensions for metadata
+
+3. **Graph Preprocessing**:
+   - Contraction Hierarchies for highway networks
+   - Bidirectional search preprocessing
+   - Landmark-based routing for long distances
+
+4. **Updates & Versioning**:
+   - Incremental updates for road closures/openings
+   - Version control for graph changes
+   - Blue-green deployment for major updates
+   - Real-time edge weight updates for traffic
+
+#### How would you handle different transportation modes in route calculation?
+
+1. **Multi-Modal Graphs**:
+   - Separate graphs for driving, walking, cycling
+   - Transit graph with schedules and transfers
+   - Accessibility graph for wheelchair routing
+
+2. **Mode-Specific Optimizations**:
+   - Driving: highways preferred, avoid residential
+   - Walking: pedestrian paths, stairs, crosswalks
+   - Cycling: bike lanes, elevation considerations
+   - Transit: schedules, transfers, real-time delays
+
+3. **Combined Journey Planning**:
+   - Park-and-ride combinations
+   - Multi-modal transfers (drive to station, then train)
+   - Dynamic mode switching based on conditions
+
+---
