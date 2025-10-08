@@ -155,3 +155,59 @@ Arguably the biggest impact you can have to performance comes back to your choic
 
 Kafka topics have a retention policy that determines how long messages are retained in the log. This is configured via the retention.ms and retention.bytes settings. The default retention policy is to keep messages for 7 days.
 In your interview, you may be asked to design a system that needs to store messages for a longer period of time. In this case, you can configure the retention policy to keep messages for a longer duration. Just be mindful of the impact on storage costs and performance.
+
+## Handling failures in message queue operations
+
+Message queues (like Kafka or RabbitMQ) decouple producers and consumers, absorb load spikes, and improve reliability.
+They introduce two key points where things can fail and must be retried:
+
+- When producing (publishing) messages to the queue
+- When consuming and processing messages from the queue
+
+### Producing with retries
+
+When producing messages, failures can occur due to network issues, broker unavailability, or transient errors. To handle these scenarios gracefully, message queue clients typically support automatic retries. Most modern client libraries (like Kafka’s producer, RabbitMQ’s publisher confirms, etc.) offer built-in retry or reconnection logic.
+
+Best practices for producers:
+
+- Enable retry logic with backoff in your producer configuration
+- If the client doesn’t support retries, catch exceptions and retry manually
+- Add logging and metrics to track failed publish attempts
+- Optionally, use a local buffer or fallback store (e.g., write to disk or Redis) to store undelivered messages in critical workflows
+
+### Consuming with retries
+
+On the consumer side, retries are more complex—and riskier.
+
+If processing a message fails (e.g., due to a downstream API being unavailable), blindly retrying can lead to:
+
+- Infinite retry loops (a.k.a. “poison pill” messages)
+- Overloading the queue
+- Service degradation
+- Duplicate processing of messages
+
+Common strategies for handling retries on the consumer side include:
+
+- Immediate Retry: If a message fails, don’t acknowledge it. The broker will requeue and redeliver it shortly.
+- Delayed Retry: Requeue the message to a delay queue or re-publish it with a delay. Helps reduce retry storms.
+- DLQ (Dead Letter Queue): After max retry attempts, send the message to a separate queue for manual inspection or later processing.
+
+Recommended consumer retry practices:
+
+A robust message processing pipeline typically follows this pattern:
+
+- Track Retry Attempts
+Use a retry_count in the message header or metadata.
+
+- Handle Failures Intelligently
+
+  - If retry_count < max_retries: Increase the count, apply delay, requeue or forward to delay queue
+  - If retry_count >= max_retries: Route the message to a Dead Letter Queue (DLQ)
+
+- Use Increasing Delays (Exponential Backoff)
+
+To prevent retry storms:
+
+1st failure → Retry after 1 minute
+2nd failure → Retry after 5 minutes
+3rd failure → Send to DLQ
