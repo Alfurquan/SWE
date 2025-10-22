@@ -6,6 +6,7 @@ def main():
     system.insert("apple", 5)
     system.insert("app", 3) 
     system.insert("application", 8)
+    system.insert("appetite", 10)
 
     print(system.get_suggestions("app"))
 
