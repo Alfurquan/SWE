@@ -15,7 +15,7 @@ When systems require real-time updates, push notifications, etc, the solution re
 - The first 'hop': How do we get updates from server to the client ?
 - The second 'hop': How do we get updates from source to the server ?
 
-![image](./imgs/real-time-updates-1.png)
+![image](../imgs/real-time-updates-1.png)
 
 We'll break down each hop separately as they involve different trade-offs which work together.
 

@@ -24,6 +24,8 @@ We'll solve the callback with pub/sub. And we can scale out our API servers now 
 - You're manually building a state machine with careful database checkpoints after each step. What if you have multiple API servers? Who picks up the dropped work?
 - You still haven't solved compensation (how do we respond to failures?). What if inventory reservation fails? You need to refund the payment. What if shipping fails? You need to release the inventory reservation.
 
+The architecture becomes a tangled mess of state management, error handling, and compensation logic scattered across your application servers.
+
 ### Event Sourcing
 
 The most foundational solution to this problem is to use an architectural pattern known as event sourcing. Event sourcing offers a more principled approach to our earlier single-server orchestration with state persistence. Instead of storing the current state, you store a sequence of events that represent what happened.
