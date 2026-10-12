@@ -54,7 +54,9 @@ Here is the high level algorithm for the approach -
 
 ## Time complexity
 
-- O(NlogN), N = for looping over N tasks and logN for heap push and pop operations
+- O(NlogS), N = for looping over N tasks and logS for heap push and pop operations
+- Every task is assigned exactly once, causing one pop from free_servers and one push to busy_servers
+- So the while loop for freeing up servers run a total of N times and not N times every loop iteration.
 
 ## Space complexity
 
