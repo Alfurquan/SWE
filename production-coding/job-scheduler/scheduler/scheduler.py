@@ -1,7 +1,7 @@
-from job import Job, JobStatus
-from store import Store
+from .job import Job
+from .store import Store
 
-class Scheduler:
+class JobScheduler:
     def __init__(self, store: Store):
         self.store = store
 
